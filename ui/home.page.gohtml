@@ -9,25 +9,47 @@
   </head>
   <body>
 <div class="container mb-5">
+
   <!-- Nav Bar -->
   <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">K8s DashBoard</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <a class="navbar-brand" href="/">Kubernetes DashBoard</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="#">Home</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#"></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link disabled" aria-disabled="true"></a>
+        </li>
       </ul>
+
+      <!-- Select namespace -->
+      <form action="/" class="d-flex" method="get">
+        <select class="form-select" name="namespace" onchange="this.form.submit()"  aria-label="select namespace">
+          <option selected>{{ .SelectedNamespace}}</option>
+          {{ range .Namespace}}
+          <option value="{{ .Name}}">{{ .Name}}</option>
+          {{ else }}
+          <option value="nil"></option>
+          {{ end }}
+        </select>
+      </form>
+      
     </div>
   </div>
 </nav>
 
 <!-- Main Content -->
-<h2>Deployments</h2>
+
+<!-- Deployments Table -->
+<h2 class="mt-4">Deployments</h2>
 <table class="table table-hover">
   <thead>
     <tr>
@@ -52,7 +74,8 @@
   {{end}}
 </table>
 
-<h2> Pods</h2>
+<!-- Pods table -->
+<h2 class="mt-4">Pods</h2>
 <table class="table table-hover">
   <thead>
     <tr>
@@ -80,8 +103,8 @@
   {{end}}
 </table>
 
-
-<h2> Services </h2>
+<!-- Services table -->
+<h2 class="mt-4"> Services </h2>
 <table class="table table-hover">
   <thead>
     <tr>

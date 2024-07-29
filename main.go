@@ -15,26 +15,32 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-type pod struct {
+type Pod struct {
 	Name      string
 	State     string
 	CreatedAt time.Time
 }
 
-type svc struct {
+type Namspace struct {
+	Name string
+}
+
+type Svc struct {
 	Name string
 	Type string
 }
 
-type deployment struct {
+type Deployment struct {
 	Name    string
 	Replica *int32
 }
 
-type k8sDashData struct {
-	Pods       []pod
-	Svcs       []svc
-	Deployment []deployment
+type K8sDashData struct {
+	Pods              []Pod
+	Svcs              []Svc
+	Deployment        []Deployment
+	Namespace         []Namspace
+	SelectedNamespace string
 }
 
 func main() {
@@ -53,6 +59,14 @@ func main() {
 }
 
 func roothandler(w http.ResponseWriter, request *http.Request) {
+	selectedNamespace := "default"
+	payloadNamespace := request.URL.Query().Get("namespace")
+	if payloadNamespace != "" {
+		selectedNamespace = payloadNamespace
+	}
+
+	fmt.Println("NAMESPACE", selectedNamespace)
+
 	myTemplates := []string{
 		"./ui/home.page.gohtml",
 	}
@@ -71,40 +85,50 @@ func roothandler(w http.ResponseWriter, request *http.Request) {
 	}
 	client := kubernetes.NewForConfigOrDie(config)
 
+	// get namespaces
+	namespaceList, err := getNamespaces(client)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	// get pods
-	podList, err := getPods(client)
+	podList, err := getPods(client, selectedNamespace)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	// get services
-	svcList, err := getServices(client)
+	svcList, err := getServices(client, selectedNamespace)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
 	// get deployment
-	deploymentList, err := getDeployment(client)
+	deploymentList, err := getDeployment(client, selectedNamespace)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
-	data := k8sDashData{
-		Pods:       podList,
-		Svcs:       svcList,
-		Deployment: deploymentList,
+	data := K8sDashData{
+		Pods:              podList,
+		Svcs:              svcList,
+		Deployment:        deploymentList,
+		Namespace:         namespaceList,
+		SelectedNamespace: selectedNamespace,
 	}
 
 	template.Execute(w, data)
 }
 
 // get pods
-func getPods(client *kubernetes.Clientset) ([]pod, error) {
-	podList := []pod{}
-	Namespace := "default"
-	pods, err := client.CoreV1().Pods(Namespace).List(context.TODO(), metav1.ListOptions{})
+func getPods(client *kubernetes.Clientset, selectedNamespace string) ([]Pod, error) {
+	podList := []Pod{}
+	pods, err := client.CoreV1().Pods(selectedNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return podList, err
 	}
 
 	for _, thispod := range pods.Items {
-		pod := pod{
+		pod := Pod{
 			Name:      thispod.Name,
 			State:     string(thispod.Status.Phase),
 			CreatedAt: thispod.CreationTimestamp.Time,
@@ -116,16 +140,15 @@ func getPods(client *kubernetes.Clientset) ([]pod, error) {
 }
 
 // get services
-func getServices(client *kubernetes.Clientset) ([]svc, error) {
-	Namespace := "default"
-	servicesList := []svc{}
-	services, err := client.CoreV1().Services(Namespace).List(context.TODO(), metav1.ListOptions{})
+func getServices(client *kubernetes.Clientset, selectedNamespace string) ([]Svc, error) {
+	servicesList := []Svc{}
+	services, err := client.CoreV1().Services(selectedNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return servicesList, err
 	}
 
 	for _, thissvc := range services.Items {
-		svc := svc{
+		svc := Svc{
 			Name: thissvc.Name,
 			Type: string(thissvc.Spec.Type),
 		}
@@ -135,21 +158,40 @@ func getServices(client *kubernetes.Clientset) ([]svc, error) {
 	return servicesList, nil
 }
 
-func getDeployment(client *kubernetes.Clientset) ([]deployment, error) {
-	namspace := "default"
-	deploymentList := []deployment{}
+// get deployemet
+func getDeployment(client *kubernetes.Clientset, selectedNamespace string) ([]Deployment, error) {
+	deploymentList := []Deployment{}
 
-	deployments, err := client.AppsV1().Deployments(namspace).List(context.TODO(), metav1.ListOptions{})
+	deployments, err := client.AppsV1().Deployments(selectedNamespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return deploymentList, err
 	}
 
 	for _, thisdeployment := range deployments.Items {
-		deployment := deployment{
+		deployment := Deployment{
 			Name:    thisdeployment.Name,
 			Replica: thisdeployment.Spec.Replicas,
 		}
 		deploymentList = append(deploymentList, deployment)
 	}
 	return deploymentList, nil
+}
+
+// get namespaces
+func getNamespaces(client *kubernetes.Clientset) ([]Namspace, error) {
+	namespacesList := []Namspace{}
+
+	namespaces, err := client.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return namespacesList, err
+	}
+
+	for _, thisNamespace := range namespaces.Items {
+		namespace := Namspace{
+			Name: thisNamespace.Name,
+		}
+		namespacesList = append(namespacesList, namespace)
+	}
+
+	return namespacesList, nil
 }
