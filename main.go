@@ -65,8 +65,6 @@ func roothandler(w http.ResponseWriter, request *http.Request) {
 		selectedNamespace = payloadNamespace
 	}
 
-	fmt.Println("NAMESPACE", selectedNamespace)
-
 	myTemplates := []string{
 		"./ui/home.page.gohtml",
 	}
