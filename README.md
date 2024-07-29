@@ -3,3 +3,4 @@ Dashboard for Kubernetes Cluster
 - Deployments
 - Services
 - Pods
+- Filter by namespace
