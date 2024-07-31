@@ -1,0 +1,9 @@
+bin/*
+tmp/*
+bin
+tmp
+.air.toml
+README.md
+LICENSE
+.gitignore
+.github/*

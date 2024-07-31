@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  k8s_dashboard:
+    image: k8s-dash:latest
+    ports:
+      - "3000:1313"
+    volumes:
+      - $HOME/.kube/config:/root/.kube/config
+      - /home/harisheoran/.minikube/ca.crt:/home/harisheoran/.minikube/ca.crt
+      - /home/harisheoran/.minikube/profiles/minikube/client.crt:/home/harisheoran/.minikube/profiles/minikube/client.crt
+      - /home/harisheoran/.minikube/profiles/minikube/client.key:/home/harisheoran/.minikube/profiles/minikube/client.key
