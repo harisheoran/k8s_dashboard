@@ -4,3 +4,9 @@ Dashboard for Kubernetes Cluster
 - Services
 - Pods
 - Filter by namespace
+
+## Feature yet to be implemented
+- Display Ingress
+- Display controllers
+- Display pod workloads
+- Release Dashboard as Helm Package
